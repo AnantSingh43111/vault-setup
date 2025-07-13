@@ -1,0 +1,5 @@
+namespaces:
+  - "Acme/Prod/Alpha"
+  - "Acme/Dev/Beta"
+  - "Globex/Prod/Gamma"
+  - "Globex/Stage/Delta" 

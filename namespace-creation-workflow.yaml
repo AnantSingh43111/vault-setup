@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: namespace-creation-
+spec:
+  entrypoint: create-namespaces
+  templates:
+    - name: create-namespaces
+      script:
+        image: hashicorp/vault:latest
+        command: [bash]
+        source: |
+          set -e
+          # Install yq
+          apk add --no-cache yq
+          # Copy scripts and variable file (assume they are in the same directory as this workflow)
+          cp /mnt/inputs/create_namespace.sh .
+          cp /mnt/inputs/run_for_all_namespaces.sh .
+          cp /mnt/inputs/namespaces.yaml .
+          chmod +x create_namespace.sh run_for_all_namespaces.sh
+          # Set Vault environment variables
+          export VAULT_ADDR={{workflow.parameters.vault_addr}}
+          export VAULT_TOKEN={{workflow.parameters.vault_token}}
+          # Run the master script
+          ./run_for_all_namespaces.sh
+      volumeMounts:
+        - name: scripts
+          mountPath: /mnt/inputs
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "100m"
+  volumes:
+    - name: scripts
+      configMap:
+        name: namespace-scripts
+  arguments:
+    parameters:
+      - name: vault_addr
+        value: "https://vault.example.com"
+      - name: vault_token
+        value: "your-vault-token" 
